@@ -19,7 +19,7 @@ int main (void) {
 	/* PHASE I: create a channel */
 	chid = ChannelCreate(0);
 	if (chid == -1) {
-		perror("Failed to create the channel\n");
+		perror("Display: Failed to create the channel\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -30,10 +30,11 @@ int main (void) {
 
 		// PHASE II - PART I: Call to receive Display object from controller
 		rcvid = MsgReceive(chid, &inputCommand, sizeof(inputCommand), NULL);
-		// PHASE II - PART II:Call for sending EOK back to the controller
-		MsgReply(rcvid, EOK, &outputMessage, sizeof(Output));
 
 		printf("Printout from Display\n");
+
+		// PHASE II - PART II:Call for sending EOK back to the controller
+		MsgReply(rcvid, EOK, &outputMessage, sizeof(Output));
 	}
 
 	/* PHASE III: destroy the message */

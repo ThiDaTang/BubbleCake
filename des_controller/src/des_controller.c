@@ -14,6 +14,8 @@ int main(int argc, char* argv[]) {
 
 	pid_t displayPID;
 	Person person;
+	Display display;
+	int response;
 	int coid;		// connection id
 	int rcvid;		// receive id
 	int chid;		// channel id
@@ -21,7 +23,7 @@ int main(int argc, char* argv[]) {
 	// PHASE I: create channel
 	/* Get pid from command-line arguments */
 	if(argc != 2) {
-		printf("Usage: message of controller <display-PID>\n");
+		printf("Controller: argument missing \n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -30,7 +32,7 @@ int main(int argc, char* argv[]) {
 	/* Call ChannelCreate() to create a channel for the inputs process to attach */
 	chid = ChannelCreate(0);
 	if (chid == -1){
-		perror("Failed to create the channel.\n");
+		perror("Controller: Failed to create the channel.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -38,14 +40,14 @@ int main(int argc, char* argv[]) {
 	coid = ConnectAttach (ND_LOCAL_NODE, displayPID, 1, _NTO_SIDE_CHANNEL, 0);
 	if (coid == -1)
 	{
-		perror ("Couldn't Connect Attach \n");
+		perror ("Controller: Couldn't Connect Attach \n");
 		exit (EXIT_FAILURE);
 	}
 
+	/* PHASE II: processing the message */
 	/* Print controller's PID; inputs needs to know this PID */
 	printf("Controller's PID: %d \n",getpid());
 
-	/* PHASE II: processing the message */
 	while(1)
 	{
 		/* PHASE II - PART I: Call to receive Display object from controller */
@@ -56,12 +58,19 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 
-		/* PHASE II - PART II:Call for sending EOK back to the controller */
-		MsgReply(rcvid, EOK, &person, sizeof(person));
-
 		// get input event from Person object and advance state machine to next accepting state (or error state)
 		// complete rest of Phase II for controller
-		printf("Printout in the Controller\n");
+
+
+
+
+		/* PHASE II - PART II:Call for sending EOK back to the input */
+		MsgReply(rcvid, EOK, &person, sizeof(person));
+
+		if (MsgSend(coid, &display, sizeof(display), &response, sizeof(response)) == -1L) {
+			printf("Controller: MsgSend had an error.\n");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	/* PHASE III: destroy and detach the message when done */

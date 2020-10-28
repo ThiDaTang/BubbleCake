@@ -1,18 +1,23 @@
 #ifndef DES_H_
 #define DES_H_
+
 /****************************************************************************************
  * States of the finite state machine (FSM)
  * each enum value represent a state
  ****************************************************************************************/
-#define NUM_STATES 8	// define the number of states in FSM
+#define NUM_STATES 12	// define the number of states in FSM
 typedef enum {
 	START_STATE,
-	LEFT_SCAN_STATE,
+	SCAN_STATE,
 	LEFT_UNLOCK_STATE,
 	LEFT_OPEN_STATE,
-	RIGHT_SCAN_STATE,
+	LEFT_CLOSE_STATE,
+	LEFT_LOCK_STATE,
+	WEIGHT_STATE,
 	RIGHT_UNLOCK_STATE,
 	RIGHT_OPEN_STATE,
+	RIGHT_CLOSE_STATE,
+	RIGHT_LOCK_STATE,
 	EXIT_STATE
 } State;
 
@@ -35,6 +40,8 @@ typedef enum {
 	EXIT
 } Input;
 
+
+
 const char *inMessage[NUM_INPUTS] = { //TODO :: each input command. For example, "ls"
 	"LS",	// left scan
 	"RS",	// right scan
@@ -53,35 +60,29 @@ const char *inMessage[NUM_INPUTS] = { //TODO :: each input command. For example,
 /****************************************************************************************
  * Output messages from the FSM
  ****************************************************************************************/
-#define NUM_OUTPUTS 12	// number of output messages from the FSM.
+#define NUM_OUTPUTS 9	// number of output messages from the FSM.
 typedef enum {// assign an enum value, one for each output message from the FSM
 	WAIT,
-	ENTER_ID,
 	LEFT_DOOR_UNLOCK,
 	LEFT_DOOR_OPEN,
-	ENTER_WEIGHT,
 	LEFT_DOOR_CLOSED,
 	LEFT_DOOR_LOCKED,
 	RIGHT_DOOR_UNLOCK,
 	RIGHT_DOOR_OPEN,
 	RIGHT_DOOR_CLOSED,
 	RIGHT_DOOR_LOCKED,
-	START_MSG
 } Output;
 
 const char *outMessage[NUM_OUTPUTS] = {	// each output message. For example, "Person opened left door"
 	"Waiting for Person...\n",
-	"Enter the Person's ID:\n",
 	"Left door unblocked by Guard\n",
 	"Person opened left door\n",
-	"Enter the Person's weight:\n",
 	"Left door closed (automatically)\n",
 	"Left door locked by Guard\n",
 	"Right door unblocked by Guard\n",
 	"Person opened right door\n",
 	"Right door closed (automatically)\n",
-	"Right door locked by Guard\n",
-	"Enter the event type (ls= left scan, rs= right scan, ws= weight scale, lo =left open, ro=right open, lc = left closed, rc = right closed , gru = guard right unlock, grl = guard right lock, gll=guard left lock, glu = guard left unlock) \n"
+	"Right door locked by Guard\n"
 };
 
 /****************************************************************************************
@@ -97,7 +98,7 @@ typedef struct {
 	int id;
 	int weight;
 	int doorDirection;
-	State personState;	// enum
+	Input eventInput;	// enum
 } Person;
 
 /****************************************************************************************
@@ -108,8 +109,9 @@ typedef struct {
  * Specifically, those messages that display the Person's ID and weight.
  ****************************************************************************************/
 typedef struct {
-	Output outputMessage;	// enum
+	Output outputMessage;	// output message enum
 	Person person;			// struct
+	Input inputMessage;     // input message enum
 } Display;
 
-#endif /* DES_H_ */
+#endif
