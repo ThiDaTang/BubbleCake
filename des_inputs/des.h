@@ -8,12 +8,13 @@
 #define NUM_STATES 12	// define the number of states in FSM
 typedef enum {
 	START_STATE,
-	SCAN_STATE,
+	LEFT_STATE,
 	LEFT_UNLOCK_STATE,
 	LEFT_OPEN_STATE,
 	LEFT_CLOSE_STATE,
 	LEFT_LOCK_STATE,
 	WEIGHT_STATE,
+	RIGHT_STATE,
 	RIGHT_UNLOCK_STATE,
 	RIGHT_OPEN_STATE,
 	RIGHT_CLOSE_STATE,
@@ -42,7 +43,7 @@ typedef enum {
 
 
 
-const char *inMessage[NUM_INPUTS] = { //TODO :: each input command. For example, "ls"
+const char *inMessage[NUM_INPUTS] = {
 	"LS",	// left scan
 	"RS",	// right scan
 	"WS",	// weight scale
@@ -60,9 +61,9 @@ const char *inMessage[NUM_INPUTS] = { //TODO :: each input command. For example,
 /****************************************************************************************
  * Output messages from the FSM
  ****************************************************************************************/
-#define NUM_OUTPUTS 9	// number of output messages from the FSM.
+#define NUM_OUTPUTS 10	// number of output messages from the FSM.
 typedef enum {// assign an enum value, one for each output message from the FSM
-	WAIT,
+	SCAN_ID,
 	LEFT_DOOR_UNLOCK,
 	LEFT_DOOR_OPEN,
 	LEFT_DOOR_CLOSED,
@@ -74,7 +75,7 @@ typedef enum {// assign an enum value, one for each output message from the FSM
 } Output;
 
 const char *outMessage[NUM_OUTPUTS] = {	// each output message. For example, "Person opened left door"
-	"Waiting for Person...\n",
+	"Person scanned ID. ID = ",
 	"Left door unblocked by Guard\n",
 	"Person opened left door\n",
 	"Left door closed (automatically)\n",
@@ -111,7 +112,15 @@ typedef struct {
 typedef struct {
 	Output outputMessage;	// output message enum
 	Person person;			// struct
-	Input inputMessage;     // input message enum
 } Display;
+
+
+/****************************************************************************************
+ * functions pointer
+ ****************************************************************************************/
+//States
+void *startStateHandler(Person person, Display *display);
+void *lsStateHandler(Person person,Display *display);
+void *rsStateHandler(Person person,Display *display);
 
 #endif

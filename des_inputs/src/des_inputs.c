@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 	int coid;
 	char userInput[5];
 	pid_t controllerID;
-	int response;
+	int response;		// response from controller.c
 	Person person;
 
 	/* Validate the command-line argument */
@@ -38,10 +38,8 @@ int main(int argc, char* argv[])
 		exit (EXIT_FAILURE);
 	}
 
-
-
-//	while(1)
-//	{
+	while(1)
+	{
 		printf("Enter the event type (ls = left scan, rs = right scan, ws = weight scale, lo = left open, \n"
 				"ro = right open, lc = left closed, rc = right closed , gru = guard right unlock, \n"
 				"grl = guard right lock, gll = guard left lock, glu = guard left unlock) \n");
@@ -102,19 +100,20 @@ int main(int argc, char* argv[])
 		else if (strcasecmp(userInput, inMessage[EXIT]) == 0) // user input: exit
 		{
 			person.eventInput = EXIT;
-			//break;
+			break;
 		}
 		else
 		{
 			printf("Invalid input\n");
 		}
-//	}
 
-	/* PHASE II: Message passing */
-	if (MsgSend(coid, &person, sizeof(person), &response, sizeof(response)) == -1L) {
-		printf("Input: MsgSend had an error.\n");
-		exit(EXIT_FAILURE);
+		/* PHASE II: Message passing */
+		if (MsgSend(coid, &person, sizeof(person), &response, sizeof(response)) == -1L) {
+			printf("Input: MsgSend had an error.\n");
+			exit(EXIT_FAILURE);
+		}
 	}
+
 
 	/* PHASE III: Disconnect */
 	ConnectDetach(coid);

@@ -11,8 +11,7 @@
 
 int main (void) {
 
-	Output outputMessage;
-	Input inputCommand;
+	Display display;
 	int rcvid;		// receive id
 	int chid;		// channel id
 
@@ -29,12 +28,21 @@ int main (void) {
 	while(1) {
 
 		// PHASE II - PART I: Call to receive Display object from controller
-		rcvid = MsgReceive(chid, &inputCommand, sizeof(inputCommand), NULL);
+		rcvid = MsgReceive(chid, &display, sizeof(display), NULL);
+		if(rcvid == -1) /* error occur*/
+		{
+			perror("Message cannot be received \n");
+			exit(EXIT_FAILURE);
+		}
 
-		printf("Printout from Display\n");
+		if(display.outputMessage == SCAN_ID)
+		{
+			printf("%s", outMessage[display.outputMessage]);
+			printf("%d\n", display.person.id);
+		}
 
 		// PHASE II - PART II:Call for sending EOK back to the controller
-		MsgReply(rcvid, EOK, &outputMessage, sizeof(Output));
+		MsgReply(rcvid, EOK, &display, sizeof(Display));
 	}
 
 	/* PHASE III: destroy the message */

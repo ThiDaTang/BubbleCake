@@ -10,12 +10,44 @@
 #include <sys/neutrino.h>
 #include "../../des_inputs/des.h"
 
+typedef void*(*StateFunc)();
+
+void *startStateHandler(Person person, Display *display)
+{
+	if(person.eventInput == LEFT_SCAN)
+	{
+		display->outputMessage = SCAN_ID;
+		return lsStateHandler;
+	}
+	else if(person.eventInput == RIGHT_SCAN)
+	{
+		display->outputMessage = SCAN_ID;
+		return rsStateHandler;
+	}
+	else
+	{
+		exit(EXIT_FAILURE);
+	}
+}
+
+void *lsStateHandler(Person person, Display *display)
+{
+	printf(" left state \n");
+	// go to leftUnblock
+}
+
+
+void *rsStateHandler(Person person, Display *display)
+{
+	printf(" right state \n");
+}
+
 int main(int argc, char* argv[]) {
 
 	pid_t displayPID;
-	Person person;
 	Display display;
-	int response;
+	Person person;
+	int response;	// response from display.c
 	int coid;		// connection id
 	int rcvid;		// receive id
 	int chid;		// channel id
@@ -46,7 +78,9 @@ int main(int argc, char* argv[]) {
 
 	/* PHASE II: processing the message */
 	/* Print controller's PID; inputs needs to know this PID */
-	printf("Controller's PID: %d \n",getpid());
+	printf("The controller is running as PID: %d \n",getpid());
+
+	StateFunc currentStateHandler = startStateHandler;
 
 	while(1)
 	{
@@ -58,19 +92,27 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 
+		// check if the current state is the starting state
+//		if(currentStateHandler == startStateHandler)
+//		{
+//			printf("Waiting for Person...\n");
+//		}
+
+		printf("debug: person id is : %d\n", person.id);
+
 		// get input event from Person object and advance state machine to next accepting state (or error state)
 		// complete rest of Phase II for controller
+		currentStateHandler = (StateFunc)(*currentStateHandler)(person, &display);
 
-
-
-
-		/* PHASE II - PART II:Call for sending EOK back to the input */
-		MsgReply(rcvid, EOK, &person, sizeof(person));
-
+		/* PHASE II - sending the message to the display file*/
 		if (MsgSend(coid, &display, sizeof(display), &response, sizeof(response)) == -1L) {
 			printf("Controller: MsgSend had an error.\n");
 			exit(EXIT_FAILURE);
 		}
+
+		/* PHASE II - PART II: Call for sending EOK back to the input */
+		MsgReply(rcvid, EOK, &person, sizeof(Person));
+
 	}
 
 	/* PHASE III: destroy and detach the message when done */
