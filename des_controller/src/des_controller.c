@@ -14,14 +14,15 @@ typedef void*(*StateFunc)();
 
 void *startStateHandler(Person person, Display *display)
 {
+	display->outputMessage = SCAN_ID;
+	display->person = person;
+
 	if(person.eventInput == LEFT_SCAN)
 	{
-		display->outputMessage = SCAN_ID;
 		return lsStateHandler;
 	}
 	else if(person.eventInput == RIGHT_SCAN)
 	{
-		display->outputMessage = SCAN_ID;
 		return rsStateHandler;
 	}
 	else
@@ -97,8 +98,6 @@ int main(int argc, char* argv[]) {
 //		{
 //			printf("Waiting for Person...\n");
 //		}
-
-		printf("debug: person id is : %d\n", person.id);
 
 		// get input event from Person object and advance state machine to next accepting state (or error state)
 		// complete rest of Phase II for controller
