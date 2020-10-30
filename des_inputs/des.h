@@ -119,8 +119,16 @@ typedef struct {
  * functions pointer
  ****************************************************************************************/
 //States
-void *startStateHandler(Person person, Display *display);
-void *lsStateHandler(Person person,Display *display);
-void *rsStateHandler(Person person,Display *display);
+void *startStateHandler(Display *display);
+void *lsStateHandler(Display *display);
+void *rsStateHandler(Display *display);
+
+
+/****************************************************************************************
+ * boolean to evaluate if the user command to the input process is valid or invalid.
+ * Loop back for another input if the user enters an invalid command
+ ****************************************************************************************/
+#define VALID_INPUT 0
+#define INVALID_INPUT 1
 
 #endif

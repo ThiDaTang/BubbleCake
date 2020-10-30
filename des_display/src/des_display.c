@@ -35,7 +35,11 @@ int main (void) {
 			exit(EXIT_FAILURE);
 		}
 
-		if(display.outputMessage == SCAN_ID)
+		printf("debug: event type message: %d\n", display.person.eventInput);
+
+
+
+		if(display.person.eventInput == LEFT_SCAN)
 		{
 			printf("%s", outMessage[display.outputMessage]);
 			printf("%d\n", display.person.id);
@@ -43,6 +47,11 @@ int main (void) {
 
 		// PHASE II - PART II:Call for sending EOK back to the controller
 		MsgReply(rcvid, EOK, &display, sizeof(Display));
+
+		if(display.person.eventInput == EXIT)
+		{
+			break;
+		}
 	}
 
 	/* PHASE III: destroy the message */

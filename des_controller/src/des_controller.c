@@ -12,36 +12,6 @@
 
 typedef void*(*StateFunc)();
 
-void *startStateHandler(Person person, Display *display)
-{
-	display->outputMessage = SCAN_ID;
-	display->person = person;
-
-	if(person.eventInput == LEFT_SCAN)
-	{
-		return lsStateHandler;
-	}
-	else if(person.eventInput == RIGHT_SCAN)
-	{
-		return rsStateHandler;
-	}
-	else
-	{
-		exit(EXIT_FAILURE);
-	}
-}
-
-void *lsStateHandler(Person person, Display *display)
-{
-	printf(" left state \n");
-	// go to leftUnblock
-}
-
-
-void *rsStateHandler(Person person, Display *display)
-{
-	printf(" right state \n");
-}
 
 int main(int argc, char* argv[]) {
 
@@ -93,6 +63,11 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 
+		display.person = person;
+
+		/* PHASE II - PART II: Call for sending EOK back to the input */
+		MsgReply(rcvid, EOK, &person, sizeof(Person));
+
 		// check if the current state is the starting state
 //		if(currentStateHandler == startStateHandler)
 //		{
@@ -101,7 +76,11 @@ int main(int argc, char* argv[]) {
 
 		// get input event from Person object and advance state machine to next accepting state (or error state)
 		// complete rest of Phase II for controller
-		currentStateHandler = (StateFunc)(*currentStateHandler)(person, &display);
+		currentStateHandler = (StateFunc)(*currentStateHandler)(&display);
+
+		printf("person id: %d\n", person.id);
+
+		printf("debug 1: exit even input: %d\n", person.eventInput);
 
 		/* PHASE II - sending the message to the display file*/
 		if (MsgSend(coid, &display, sizeof(display), &response, sizeof(response)) == -1L) {
@@ -109,8 +88,12 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 
-		/* PHASE II - PART II: Call for sending EOK back to the input */
-		MsgReply(rcvid, EOK, &person, sizeof(Person));
+		printf("debug 2: exit even input: %d\n", person.eventInput);
+
+		if(person.eventInput == EXIT)
+		{
+			break;
+		}
 
 	}
 
@@ -120,4 +103,34 @@ int main(int argc, char* argv[]) {
 
 	return EXIT_SUCCESS;
 
+}
+
+void *startStateHandler(Display *display)
+{
+	display->outputMessage = SCAN_ID;
+
+	if(display->person.eventInput == LEFT_SCAN)
+	{
+		return lsStateHandler;
+	}
+	else if(display->person.eventInput == RIGHT_SCAN)
+	{
+		return rsStateHandler;
+	}
+	else
+	{
+		exit(EXIT_FAILURE);
+	}
+}
+
+void *lsStateHandler(Display *display)
+{
+	printf(" left state \n");
+	// go to leftUnblock
+}
+
+
+void *rsStateHandler(Display *display)
+{
+	printf(" right state \n");
 }

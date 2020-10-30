@@ -17,6 +17,7 @@ int main(int argc, char* argv[])
 	pid_t controllerID;
 	int response;		// response from controller.c
 	Person person;
+	int inputStatus = VALID_INPUT;
 
 	/* Validate the command-line argument */
 	if(argc != 2)
@@ -100,20 +101,27 @@ int main(int argc, char* argv[])
 		else if (strcasecmp(userInput, inMessage[EXIT]) == 0) // user input: exit
 		{
 			person.eventInput = EXIT;
-			break;
 		}
 		else
 		{
 			printf("Invalid input\n");
+			inputStatus = INVALID_INPUT;
 		}
 
 		/* PHASE II: Message passing */
-		if (MsgSend(coid, &person, sizeof(person), &response, sizeof(response)) == -1L) {
-			printf("Input: MsgSend had an error.\n");
-			exit(EXIT_FAILURE);
+		if (inputStatus == VALID_INPUT)
+		{
+			if (MsgSend(coid, &person, sizeof(person), &response, sizeof(response)) == -1L) {
+				printf("Input: MsgSend had an error.\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+
+		if (strcasecmp(userInput, inMessage[EXIT]) == 0) // user input: exit
+		{
+			break;
 		}
 	}
-
 
 	/* PHASE III: Disconnect */
 	ConnectDetach(coid);
