@@ -35,10 +35,6 @@ int main (void) {
 			exit(EXIT_FAILURE);
 		}
 
-		printf("debug: event type message: %d\n", display.person.eventInput);
-
-
-
 		if(display.person.eventInput == LEFT_SCAN)
 		{
 			printf("%s", outMessage[display.outputMessage]);

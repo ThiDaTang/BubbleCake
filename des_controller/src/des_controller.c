@@ -55,6 +55,12 @@ int main(int argc, char* argv[]) {
 
 	while(1)
 	{
+		// check if the current state is the starting state
+		if(currentStateHandler == startStateHandler)
+		{
+			printf("Waiting for Person...\n");
+		}
+
 		/* PHASE II - PART I: Call to receive Display object from controller */
 		rcvid = MsgReceive(chid, &person, sizeof(person),NULL);
 		if(rcvid == -1) /* error occur*/
@@ -68,19 +74,16 @@ int main(int argc, char* argv[]) {
 		/* PHASE II - PART II: Call for sending EOK back to the input */
 		MsgReply(rcvid, EOK, &person, sizeof(Person));
 
-		// check if the current state is the starting state
-//		if(currentStateHandler == startStateHandler)
-//		{
-//			printf("Waiting for Person...\n");
-//		}
+		if(person.eventInput != EXIT)
+		{
+			// get input event from Person object and advance state machine to next accepting state (or error state)
+			currentStateHandler = (StateFunc)(*currentStateHandler)(&display);
+		}
+		else
+		{
+			person.eventInput = EXIT;
+		}
 
-		// get input event from Person object and advance state machine to next accepting state (or error state)
-		// complete rest of Phase II for controller
-		currentStateHandler = (StateFunc)(*currentStateHandler)(&display);
-
-		printf("person id: %d\n", person.id);
-
-		printf("debug 1: exit even input: %d\n", person.eventInput);
 
 		/* PHASE II - sending the message to the display file*/
 		if (MsgSend(coid, &display, sizeof(display), &response, sizeof(response)) == -1L) {
@@ -88,13 +91,10 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 
-		printf("debug 2: exit even input: %d\n", person.eventInput);
-
 		if(person.eventInput == EXIT)
 		{
 			break;
 		}
-
 	}
 
 	/* PHASE III: destroy and detach the message when done */
