@@ -10,9 +10,6 @@
 #include <sys/neutrino.h>
 #include "../../des_inputs/des.h"
 
-typedef void*(*StateFunc)();
-
-
 int main(int argc, char* argv[]) {
 
 	pid_t displayPID;
@@ -51,12 +48,12 @@ int main(int argc, char* argv[]) {
 	/* Print controller's PID; inputs needs to know this PID */
 	printf("The controller is running as PID: %d \n",getpid());
 
-	StateFunc currentStateHandler = startStateHandler;
+	StateFunc CUR_STATE_HANDLER = &ID_SCAN_HANDLER;
 
 	while(1)
 	{
 		// check if the current state is the starting state
-		if(currentStateHandler == startStateHandler)
+		if(CUR_STATE_HANDLER == ID_SCAN_HANDLER)
 		{
 			printf("Waiting for Person...\n");
 		}
@@ -77,7 +74,7 @@ int main(int argc, char* argv[]) {
 		if(person.eventInput != EXIT)
 		{
 			// get input event from Person object and advance state machine to next accepting state (or error state)
-			currentStateHandler = (StateFunc)(*currentStateHandler)(&display);
+			CUR_STATE_HANDLER = (StateFunc)(*CUR_STATE_HANDLER)(&display);
 		}
 		else
 		{
@@ -85,7 +82,7 @@ int main(int argc, char* argv[]) {
 		}
 
 
-		/* PHASE II - sending the message to the display file*/
+//		/* PHASE II - sending the message to the display file*/
 		if (MsgSend(coid, &display, sizeof(display), &response, sizeof(response)) == -1L) {
 			printf("Controller: MsgSend had an error.\n");
 			exit(EXIT_FAILURE);
@@ -105,32 +102,216 @@ int main(int argc, char* argv[]) {
 
 }
 
-void *startStateHandler(Display *display)
+
+void *ID_SCAN_HANDLER(Display *display)
 {
+	printf("ID_SCAN function test\n");
 	display->outputMessage = SCAN_ID;
 
-	if(display->person.eventInput == LEFT_SCAN)
+	if(display->person.doorDirection == INBOUND)  //entering
 	{
-		return lsStateHandler;
+		if(display->person.eventInput == LEFT_SCAN){
+			display->person.curState = LEFT_STATE;
+			printf("left_scan test");
+			return DOOR_UNLOCK_HANDLER;
+		}
 	}
-	else if(display->person.eventInput == RIGHT_SCAN)
+	else if(display->person.doorDirection == OUTBOUND)   //leaving
 	{
-		return rsStateHandler;
+		if(display->person.eventInput == RIGHT_SCAN){
+			display->person.curState = RIGHT_STATE;
+			printf("right_scan test");
+			return DOOR_UNLOCK_HANDLER;
+		}
 	}
-	else
-	{
-		exit(EXIT_FAILURE);
-	}
+
+	printf("stay the same function ID_SCAN_HANDLER\n");
+	return ID_SCAN_HANDLER;
 }
 
-void *lsStateHandler(Display *display)
+void *DOOR_UNLOCK_HANDLER(Display *display)
 {
-	printf(" left state \n");
-	// go to leftUnblock
+	if(display->person.doorDirection == INBOUND)  //entering
+	{
+		if(display->person.eventInput == GUARD_LEFT_UNLOCK)
+		{
+			display->outputMessage = LEFT_DOOR_UNLOCK;
+			display->person.curState = LEFT_UNLOCK_STATE;
+			printf("inbound left unlock test\n");
+			return DOOR_OPEN_HANDLER;
+		}
+		else if(display->person.eventInput == GUARD_RIGHT_UNLOCK)
+		{
+			display->outputMessage = RIGHT_DOOR_UNLOCK;
+			display->person.curState = RIGHT_UNLOCK_STATE;
+			printf("inbound right unlock, after weight \n");
+			return DOOR_OPEN_HANDLER;
+		}
+	}
+	else if(display->person.doorDirection == OUTBOUND)  //leaving
+	{
+		if(display->person.eventInput == GUARD_RIGHT_UNLOCK)
+		{
+			display->outputMessage = RIGHT_DOOR_UNLOCK;
+			display->person.curState = RIGHT_UNLOCK_STATE;
+			printf("leave right unlock test\n");
+			return DOOR_OPEN_HANDLER;
+		}
+		else if (display->person.eventInput == GUARD_LEFT_UNLOCK)
+		{
+			display->outputMessage = LEFT_DOOR_UNLOCK;
+			display->person.curState = LEFT_UNLOCK_STATE;
+			printf("outbound left unlock test\n");
+			return DOOR_OPEN_HANDLER;
+		}
+	}
+	printf("stay the same function DOOR_UNLOCK_HANDLER\n");
+	return DOOR_UNLOCK_HANDLER;
+}
+
+void *DOOR_OPEN_HANDLER(Display *display)
+{
+	if(display->person.doorDirection == INBOUND)  //entering
+	{
+		if(display->person.eventInput == LEFT_OPEN)
+		{
+			display->person.curState = LEFT_OPEN_STATE;
+			display->outputMessage = LEFT_DOOR_OPEN;
+			printf("inbound left door open test \n");
+			return WEIGHT_HANDLER;
+		}
+		else if(display->person.eventInput == RIGHT_OPEN)
+		{
+			display->person.curState = RIGHT_OPEN_STATE;
+			display->outputMessage = RIGHT_DOOR_OPEN;
+			printf("inbound right door open test \n");
+			return DOOR_CLOSE_HANDLER;
+		}
+	}
+	else if(display->person.doorDirection == OUTBOUND)  //leaving
+	{
+		if(display->person.eventInput == RIGHT_OPEN)
+		{
+			display->person.curState = RIGHT_OPEN_STATE;
+			display->outputMessage = RIGHT_DOOR_OPEN;
+			printf("outbound right door open test \n");
+			return WEIGHT_HANDLER;
+		}
+		if(display->person.eventInput == LEFT_OPEN)
+		{
+			display->person.curState = LEFT_OPEN_STATE;
+			display->outputMessage = LEFT_DOOR_OPEN;
+			printf("outbound left door open test \n");
+			return DOOR_CLOSE_HANDLER;
+		}
+	}
+
+	printf("stay the same function DOOR_OPEN_HANDLER\n");
+	return DOOR_OPEN_HANDLER;
 }
 
 
-void *rsStateHandler(Display *display)
+void *WEIGHT_HANDLER(Display *display)
 {
-	printf(" right state \n");
+	printf("weight function \n");
+
+	if(display->person.eventInput == WEIGHT_SCALE)
+	{
+		display->person.curState = WEIGHT_STATE;
+		return DOOR_CLOSE_HANDLER;
+	}
+
+	printf("stay the same function WEIGHT_HANDLER\n");
+	return WEIGHT_HANDLER;
+
+}
+
+void *DOOR_CLOSE_HANDLER(Display *display)
+{
+
+	if(display->person.doorDirection == INBOUND)  //entering
+	{
+		if(display->person.eventInput == LEFT_CLOSE)
+		{
+			display->outputMessage = LEFT_DOOR_CLOSED;
+			display->person.curState = LEFT_CLOSE_STATE;
+			printf("inbound left door close test \n");
+			return DOOR_LOCK_HANDLER;
+		}
+		else if(display->person.eventInput == RIGHT_CLOSE)
+		{
+			printf("inbound right door close test\n");
+			display->outputMessage = RIGHT_DOOR_CLOSED;
+			display->person.curState = RIGHT_CLOSE_STATE;
+			return DOOR_LOCK_HANDLER;
+		}
+	}
+	else if(display->person.doorDirection == OUTBOUND)  //leaving
+	{
+		if(display->person.eventInput == RIGHT_CLOSE)
+		{
+			printf("right door close test\n");
+			display->outputMessage = RIGHT_DOOR_CLOSED;
+			display->person.curState = RIGHT_CLOSE_STATE;
+			return DOOR_LOCK_HANDLER;
+		}
+		if(display->person.eventInput == LEFT_CLOSE)
+		{
+			display->outputMessage = LEFT_DOOR_CLOSED;
+			display->person.curState = LEFT_CLOSE_STATE;
+			printf("outbound left door close test \n");
+			return DOOR_LOCK_HANDLER;
+		}
+	}
+
+	printf("stay the same function DOOR_CLOSE_HANDLER\n");
+	return DOOR_CLOSE_HANDLER;
+}
+
+void *DOOR_LOCK_HANDLER(Display *display)
+{
+	if(display->person.doorDirection == INBOUND)//entering
+	{
+		if(display->person.eventInput == GUARD_LEFT_LOCK)
+		{
+			printf("inbound gll \n");
+			display->outputMessage = LEFT_DOOR_LOCKED;
+			display->person.curState = LEFT_LOCK_STATE;
+			return DOOR_UNLOCK_HANDLER;
+		}
+		else if(display->person.eventInput == GUARD_RIGHT_LOCK)
+		{
+			printf("inbound grl \n");
+			display->outputMessage = RIGHT_DOOR_LOCKED;
+			display->person.curState = RIGHT_LOCK_STATE;
+			return EXIT_HANDLER;
+		}
+	}
+	else if(display->person.doorDirection == OUTBOUND)  //leaving
+	{
+		if(display->person.eventInput == GUARD_RIGHT_LOCK)
+		{
+			printf("outbound gru \n");
+			display->outputMessage = RIGHT_DOOR_LOCKED;
+			display->person.curState = RIGHT_LOCK_STATE;
+			return DOOR_UNLOCK_HANDLER;
+		}
+		else if(display->person.eventInput == GUARD_LEFT_LOCK)
+		{
+			printf("outbound gll \n");
+			display->outputMessage = LEFT_DOOR_LOCKED;
+			display->person.curState = LEFT_LOCK_STATE;
+			return EXIT_HANDLER;
+		}
+	}
+
+
+	return DOOR_LOCK_HANDLER;
+}
+
+
+void *EXIT_HANDLER(Display *display)
+{
+	display->person.curState = EXIT_STATE;
+	return EXIT_HANDLER;
 }
