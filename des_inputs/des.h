@@ -100,6 +100,7 @@ typedef struct {
 	int weight;
 	int doorDirection;
 	Input eventInput;	// enum
+	int curState;
 } Person;
 
 /****************************************************************************************
@@ -119,9 +120,15 @@ typedef struct {
  * functions pointer
  ****************************************************************************************/
 //States
-void *startStateHandler(Display *display);
-void *lsStateHandler(Display *display);
-void *rsStateHandler(Display *display);
+typedef void*(*StateFunc)();
+void *START_HANDLER(Display *display);
+void *ID_SCAN_HANDLER(Display *display);
+void *DOOR_UNLOCK_HANDLER(Display *display);
+void *DOOR_OPEN_HANDLER(Display *display);
+void *WEIGHT_HANDLER(Display *display);
+void *DOOR_CLOSE_HANDLER(Display *display);
+void *DOOR_LOCK_HANDLER(Display *display);
+void *EXIT_HANDLER(Display *display);
 
 
 /****************************************************************************************
