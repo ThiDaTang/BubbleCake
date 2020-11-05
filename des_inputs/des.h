@@ -64,6 +64,7 @@ const char *inMessage[NUM_INPUTS] = {
 #define NUM_OUTPUTS 10	// number of output messages from the FSM.
 typedef enum {// assign an enum value, one for each output message from the FSM
 	SCAN_ID,
+	WEIGHT_INFO,
 	LEFT_DOOR_UNLOCK,
 	LEFT_DOOR_OPEN,
 	LEFT_DOOR_CLOSED,
@@ -76,6 +77,7 @@ typedef enum {// assign an enum value, one for each output message from the FSM
 
 const char *outMessage[NUM_OUTPUTS] = {	// each output message. For example, "Person opened left door"
 	"Person scanned ID. ID = ",
+	"Person weighted, Weight = ",
 	"Left door unblocked by Guard\n",
 	"Person opened left door\n",
 	"Left door closed (automatically)\n",
@@ -121,12 +123,15 @@ typedef struct {
  ****************************************************************************************/
 //States
 typedef void*(*StateFunc)();
+
 void *ID_SCAN_HANDLER(Display *display);
 void *DOOR_UNLOCK_HANDLER(Display *display);
 void *DOOR_OPEN_HANDLER(Display *display);
 void *WEIGHT_HANDLER(Display *display);
 void *DOOR_CLOSE_HANDLER(Display *display);
 void *DOOR_LOCK_HANDLER(Display *display);
+
+
 
 /****************************************************************************************
  * boolean to evaluate if the user command to the input process is valid or invalid.
