@@ -35,17 +35,28 @@ int main (void) {
 			exit(EXIT_FAILURE);
 		}
 
-		if(display.person.eventInput == LEFT_SCAN)
+		printf("errorMsg %d\n",display.errorMsg);
+		if(display.errorMsg != -1 && display.person.eventInput != EXIT)
 		{
 			printf("%s", outMessage[display.outputMessage]);
-			printf("%d\n", display.person.id);
+
+			if(display.person.eventInput == LEFT_SCAN || display.person.eventInput == RIGHT_SCAN)
+			{
+				printf("%d\n", display.person.id);
+			}
+			else if(display.person.eventInput == WEIGHT_SCALE)
+			{
+				printf("%d\n", display.person.weight);
+			}
 		}
 
 		// PHASE II - PART II:Call for sending EOK back to the controller
 		MsgReply(rcvid, EOK, &display, sizeof(Display));
 
+
 		if(display.person.eventInput == EXIT)
 		{
+			printf("Exit Display \n");
 			break;
 		}
 	}
