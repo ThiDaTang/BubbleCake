@@ -100,7 +100,6 @@ typedef struct {
 	int weight;
 	int doorDirection;
 	Input eventInput;	// enum
-	int curState;
 } Person;
 
 /****************************************************************************************
@@ -113,6 +112,7 @@ typedef struct {
 typedef struct {
 	Output outputMessage;	// output message enum
 	Person person;			// struct
+	int errorMsg;
 } Display;
 
 
@@ -121,15 +121,12 @@ typedef struct {
  ****************************************************************************************/
 //States
 typedef void*(*StateFunc)();
-void *START_HANDLER(Display *display);
 void *ID_SCAN_HANDLER(Display *display);
 void *DOOR_UNLOCK_HANDLER(Display *display);
 void *DOOR_OPEN_HANDLER(Display *display);
 void *WEIGHT_HANDLER(Display *display);
 void *DOOR_CLOSE_HANDLER(Display *display);
 void *DOOR_LOCK_HANDLER(Display *display);
-void *EXIT_HANDLER(Display *display);
-
 
 /****************************************************************************************
  * boolean to evaluate if the user command to the input process is valid or invalid.
